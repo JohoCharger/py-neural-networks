@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import util
 import random
@@ -27,8 +29,8 @@ def main():
     b_1 = np.random.randn(30)
     b_2 = np.random.randn(10)
 
-    learning_rate = 0.04
-    epochs = 10
+    learning_rate = 0.1
+    epochs = 100
     batch_size = 10
 
     for epoch in range(epochs):
@@ -53,17 +55,18 @@ def main():
             # Update parameters
             w_1, w_2, b_1, b_2 = update_params(w_1, w_2, b_1, b_2, dC_dW1, dC_dW2, dC_db1, dC_db2, learning_rate)
 
-    print("Training complete --- Begin testing...")
-    test_x = data[9000:]
-    test_y = labels[9000:]
-    correct = 0
-    for i in range(len(test_x)):
-        a_0 = test_x[i]
-        a_2 = feed_forward(a_0, w_1, w_2, b_1, b_2)
-        if np.argmax(a_2) == np.argmax(test_y[i]):
-            correct += 1
+        print(f"Epoch {epoch + 1} completed")
+        test_x = data[9000:]
+        test_y = labels[9000:]
+        correct = 0
+        for i in range(len(test_x)):
+            a_0 = test_x[i]
+            a_2 = feed_forward(a_0, w_1, w_2, b_1, b_2)
+            if np.argmax(a_2) == np.argmax(test_y[i]):
+                correct += 1
 
-    print(f"Accuracy: {correct / len(test_x) * 100}%")
+        print(f"Accuracy: {math.floor(correct / len(test_x) * 100)}%")
+
 
 
 def feed_forward(a_0, w_1, w_2, b_1, b_2):
