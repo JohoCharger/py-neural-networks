@@ -2,7 +2,6 @@ import math
 
 import numpy as np
 import util
-import random
 
 def main():
     t10k_image_path = "mnist/t10k-images.idx3-ubyte"  # Replace with your path
@@ -29,9 +28,9 @@ def main():
     b_1 = np.random.randn(30)
     b_2 = np.random.randn(10)
 
-    learning_rate = 0.1
+    learning_rate = 0.04
     epochs = 100
-    batch_size = 10
+    batch_size = 30
 
     for epoch in range(epochs):
         for i in range(0, len(x), batch_size):
@@ -67,8 +66,6 @@ def main():
 
         print(f"Accuracy: {math.floor(correct / len(test_x) * 100)}%")
 
-
-
 def feed_forward(a_0, w_1, w_2, b_1, b_2):
     z_1 = a_0 @ w_1 + b_1
     a_1 = sigmoid(z_1)
@@ -88,24 +85,24 @@ def cost(y_hat, y):
     summed_losses = (1 / m) * np.sum(losses, axis=1)
     return summed_losses
 
-def backprop_last_layer(m, a_3, a_1, y):
-    dC_dZ2 = (1/m) * (a_3 - y)
+def backprop_last_layer(m, a_2, a_1, y):
+    dC_dZ2 = (1/m) * (a_2 - y)
     dC_dW2 = a_1.T @ dC_dZ2
-    dC_db2 = np.sum(dC_dZ2, axis=0)
+    dC_db2 = np.sum(dC_dZ2, axis=0, keepdims=True)
     return dC_dW2, dC_db2, dC_dZ2
 
 def backprop_middle_layer(dC_dZ2, w_2, a_0, z_1):
     dC_dA1 = dC_dZ2 @ w_2.T
     dC_dZ1 = dC_dA1 * sigmoid_prime(z_1)
     dC_dW1 = a_0.T @ dC_dZ1
-    dC_db1 = np.sum(dC_dZ1, axis=0)
+    dC_db1 = np.sum(dC_dZ1, axis=0, keepdims=True)
     return dC_dW1, dC_db1, dC_dZ1
 
-def update_params(w_1, w_2, b_1, b_2, dC_dW1, dC_dW2, dC_db1, dC_db2, learning_rate):
-    w_1 = w_1 - learning_rate * dC_dW1
-    w_2 = w_2 - learning_rate * dC_dW2
-    b_1 = b_1 - learning_rate * dC_db1
-    b_2 = b_2 - learning_rate * dC_db2
+def update_params(w_1, w_2, b_1, b_2, dC_dW1, dC_dW2, dC_db1, dC_db2, alpha):
+    w_1 = w_1 - alpha * dC_dW1
+    w_2 = w_2 - alpha * dC_dW2
+    b_1 = b_1 - alpha * dC_db1
+    b_2 = b_2 - alpha * dC_db2
     return w_1, w_2, b_1, b_2
 
 
