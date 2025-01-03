@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
    name='py-neural-networks',
@@ -6,6 +6,6 @@ setup(
    description='A neural network implementation in Python',
    author='Jooans Lindroos',
    author_email='joonas.lindroos@outlook.com',
-   packages=['py-neural-networks'],  #same as name
+   packages=find_packages(),  #same as name
    install_requires=['numpy'], #external packages as dependencies
 )
