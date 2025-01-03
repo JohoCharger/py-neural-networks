@@ -23,8 +23,8 @@ def load_idx1_ubyte(file_path):
     return data
 
 def prep_data():
-    t10k_image_path = "mnist/t10k-images.idx3-ubyte"  # Replace with your path
-    t10k_label_path = "mnist/t10k-labels.idx1-ubyte"  # Replace with your path
+    t10k_image_path = "mnist/t10k-images.idx3-ubyte"
+    t10k_label_path = "mnist/t10k-labels.idx1-ubyte"  
     raw_data = load_idx3_ubyte(t10k_image_path)
     raw_labels = load_idx1_ubyte(t10k_label_path)
 
