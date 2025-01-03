@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-   name='py-neural-networks',
+   name='py_neural_networks',
    version='1.0',
    description='A neural network implementation in Python',
    author='Jooans Lindroos',
