@@ -1,95 +1,66 @@
 import numpy as np
+import activation_functions as af
 
 class NeuralNetwork:
-    def __init__(self, input_size, hidden_size, output_size, activations, alpha):
-        self.w_1 = np.random.randn(input_size, hidden_size) * np.sqrt(2/input_size)
-        self.w_2 = np.random.randn(hidden_size, output_size) * np.sqrt(2/hidden_size)
-        self.b_1 = np.zeros((1, hidden_size))
-        self.b_2 = np.zeros((1, output_size))
-        self.cache = {
-            "Z1": None,
-            "Z2": None,
-            "A1": None,
-            "A2": None,
-        }
+    def __init__(self, shape, activations, alpha):
+        self.weights = []
+        self.biases = []
+
+        self._init_weights_and_biases(shape)
+        self.layers = len(shape) - 1
+
+        self.cache_a = [x for x in range(self.layers)]
+        self.cache_z = [x for x in range(self.layers)]
+
         self.alpha = alpha
 
-        match activations[0]:
-            case "sigmoid":
-                self.activation1 = _sigmoid
-                self.activation1_prime = _sigmoid_prime
-            case "relu":
-                self.activation1 = _relu
-                self.activation1_prime = _relu_prime
-            case "softmax":
-                self.activation1 = _softmax
-                self.activation1_prime = None
-            case _:
-                raise ValueError("Invalid activation function")
+        self.a = [af.get_activation(act) for act in activations]
+        self.a_primes = [af.get_activation_prime(act) for act in activations]
 
-        match activations[1]:
-            case "sigmoid":
-                self.activation2 = _sigmoid
-                self.activation2_prime = _sigmoid_prime
-            case "relu":
-                self.activation2 = _relu
-                self.activation2_prime = _relu_prime
-            case "softmax":
-                self.activation2 = _softmax
-                self.activation2_prime = None
-            case _:
-                raise ValueError("Invalid activation function")
+    
+    def _init_weights_and_biases(self, shape):
+        for i in range(len(shape) - 1):
+            self.weights.append(np.random.randn(shape[i], shape[i+1]) * np.sqrt(2/(shape[i])))
+            self.biases.append(np.zeros((1, shape[i+1])))
 
     def forward(self, x):
-        z_1 = x @ self.w_1 + self.b_1
-        self.cache["Z1"] = z_1
-        a_1 = self.activation1(z_1)
-        self.cache["A1"] = a_1
-        z_2 = a_1 @ self.w_2 + self.b_2
-        self.cache["Z2"] = z_2
-        a_2 = self.activation2(z_2)
-        self.cache["A2"] = a_2
+        for i in range(self.layers):
+            z = x @ self.weights[i] + self.biases[i]
+            a = self.a[i](z)
+            self.cache_a[i] = a
+            self.cache_z[i] = z
+            x = a
+        return x
+
 
     def backprop(self, x, y):
         m = x.shape[0]
-        dz_2 = self.cache["A2"] - y
-        dw_2 = (self.cache["A1"].T @ dz_2) / m
-        db_2 = np.sum(dz_2, axis=0, keepdims=True) / m
-        dz_1 = dz_2 @ self.w_2.T * self.activation1_prime(self.cache["Z1"])
-        dw_1 = x.T @ dz_1 / m
-        db_1 = np.sum(dz_1, axis=0, keepdims=True) / m
+        dz = (self.cache_a[self.layers - 1] - y) / m
 
-        self.w_1 -= self.alpha * dw_1
-        self.w_2 -= self.alpha * dw_2
-        self.b_1 -= self.alpha * db_1
-        self.b_2 -= self.alpha * db_2
-
+        for i in range(self.layers - 1, -1, -1):
+            if i > 0:
+                dw = self.cache_a[i-1].T @ dz
+            else:
+                dw = x.T @ dz
+            
+            self.weights[i] -= self.alpha * dw
+            db = np.sum(dz, axis=0, keepdims=True)
+            self.biases[i] -= self.alpha * db
+            if i > 0:
+                dz = dz @ self.weights[i].T * self.a_primes[i - 1](self.cache_z[i - 1])  # Apply derivative to pre-activation values
 
     def test(self, x_test, y_test):
-        correct = 0
+        correct = 0.0
         for i in range(len(x_test)):
-            self.forward(x_test[i])
-            if np.argmax(self.cache["A2"]) == np.argmax(y_test[i]):
-                correct += 1
+            output = self.forward(x_test[i])
 
-        return correct / len(x_test)
+            if np.argmax(output) == np.argmax(y_test[i]):
+                correct += 1.0
+
+        return correct / float(len(x_test))
     
     def dump(self):
-        np.savetxt("w_1.txt", self.w_1)
-
-def _sigmoid(Z):
-    return 1 / (1 + np.exp(-Z))
-
-def _sigmoid_prime(Z):
-    return _sigmoid(Z) * (1 - _sigmoid(Z))
-
-def _relu(Z):
-    return np.maximum(0, Z)
-
-def _relu_prime(Z):
-    return Z > 0
-
-def _softmax(Z):
-    Z_stable = Z - np.max(Z, axis=1, keepdims=True)
-    exp_Z = np.exp(Z_stable)
-    return exp_Z / np.sum(exp_Z, axis=1, keepdims=True)
+        for i, weight in enumerate(self.weights):
+            np.savetxt(f"w_{i+1}.txt", weight)
+        for i, bias in enumerate(self.biases):
+            np.savetxt(f"b_{i+1}.txt", bias)
